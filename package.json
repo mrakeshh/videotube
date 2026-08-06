@@ -1,19 +1,24 @@
 {
   "name": "learningbackend",
   "version": "1.0.0",
-  "description": "first backend app",
+  "description": "A folder for learning backend using javascript",
   "keywords": [
-    "backend"
+    "Backend",
+    "BackendDevelopment"
   ],
+  "homepage": "https://github.com/mrakeshh/LearningBackendDevelopment#readme",
+  "bugs": {
+    "url": "https://github.com/mrakeshh/LearningBackendDevelopment/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrakeshh/LearningBackendDevelopment.git"
+  },
   "license": "ISC",
-  "author": "Rakesh Mehta",
+  "author": "Rakesh",
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
-  },
-  "dependencies": {
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1"
+    "test": "echo \"Error: no test specified\" && exit 1"
   }
 }
