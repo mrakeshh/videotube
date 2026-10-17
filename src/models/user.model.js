@@ -52,11 +52,11 @@ const userSchema = new Schema(
 )
 
 // userSchema.pre("save") runs before saving the document
-userSchema.pre("save", async function(next){
-    if(!this.isModified("password")) return next();
+userSchema.pre("save", async function(){
+    if(!this.isModified("password")) return;
 
     this.password = await bcrypt.hash(this.password, 10)// 10 here is the cost factor
-    next()
+    
 })  //Here we don't take ()=>{} callback because arrow function doesn't know the context but here we need context
 
 userSchema.methods.isPasswordCorrect = async function(password){
