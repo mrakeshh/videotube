@@ -132,13 +132,13 @@ const loginUser = asyncHandler(async (req, res) => {
 const logoutUser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(
     req.user._id,
-    { $set: { refreshToken: undefined } },
+    { $unset: { refreshToken: 1 } },
     { new: true }
   );
   const options = {
     httpOnly: true,
     secure: true,
-  };
+  }
   return res
     .status(200)
     .clearCookie("accessToken", options)
@@ -233,7 +233,9 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 });
 
 const updateAvatar = asyncHandler(async (req, res) => {
-  const avatarLocalPath = req.file?.path;
+  // console.log(req);
+  
+  const avatarLocalPath = req.file?.path
   if (!avatarLocalPath) {
     throw new ApiError(400, "Avatar is missing");
   }
@@ -243,7 +245,7 @@ const updateAvatar = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Error while uploading avatar on cloudinary");
   }
 
-  const user = User.findByIdAndUpdate(
+  const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
       $set: {
@@ -272,7 +274,7 @@ const updateCoverImage = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Error while uploading cover image on cloudinary");
   }
 
-  const user = User.findByIdAndUpdate(
+  const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
       $set: {
@@ -280,7 +282,7 @@ const updateCoverImage = asyncHandler(async (req, res) => {
       },
     },
     {
-      new: true,
+     returnDocument: 'after',
     }
   ).select("-password");
 
