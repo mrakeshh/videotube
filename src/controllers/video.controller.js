@@ -36,8 +36,8 @@ const getAllVideos = asyncHandler(async (req, res) => {
     if (search) {
         const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
         match.$or = [
-            {title: {$regex: safeSearch, options: "i"}},
-            {description: {$regex: safeSearch, options: "i"}}
+            {title: {$regex: safeSearch, $options: "i"}},
+            {description: {$regex: safeSearch, $options: "i"}}
         ]
     }
 
@@ -98,8 +98,45 @@ const getAllVideos = asyncHandler(async (req, res) => {
 })
 
 const publishAVideo = asyncHandler(async (req, res) => {
-    const { title, description} = req.body
+    const { title, description, isPublished} = req.body
     // TODO: get video, upload to cloudinary, create video
+
+    if (!title.trim() || !description.trim()) {
+        throw new ApiError(400, "title and description are required fields")
+    }
+
+    const videoLocalPath = req.files?.videoFile?.[0]?.path
+    const thumbnailLocalPath = req.files?.thumbnail?.[0]?.path
+
+    if (!(videoLocalPath && thumbnailLocalPath)) {
+        throw new ApiError(400, "Video or thumbnail file not found")
+    }
+    
+    const videoFile = await uploadOnCloudinary(videoLocalPath)
+    const thumbnail = await uploadOnCloudinary(thumbnailLocalPath)
+
+    if (!videoFile) {
+        throw new ApiError(500, "Error while uploading videoFile on cloudinary")
+    }
+    if (!thumbnail) {
+        throw new ApiError(500, "Error while uploading thumbnail on cloudinary")
+    }
+
+    const video = await Video.create({
+        videoFile: videoFile.url,
+        thumbnail: thumbnail.url,
+        title,
+        description: description,
+        duration: videoFile.duration,
+        isPublished,
+        owner: req.user._id,
+    })
+
+    return res
+    .status(201)
+    .json(
+        new ApiResponse(201, video, "Video uploaded successfully")
+    )
 })
 
 const getVideoById = asyncHandler(async (req, res) => {
