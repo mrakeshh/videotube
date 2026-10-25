@@ -25,7 +25,31 @@ const uploadOnCloudinary = async(localFilePath) => {
   }
 }
 
-export {uploadOnCloudinary}
+const getPublicIdFromUrl = (url)=>{
+  if(!url) return null
+  const afterUpload = url.split("/upload/")[1]
+  if(!afterUpload) return null
 
+  return afterUpload.replace(/^v\d+\//, "").replace(/\.[^/.]+$/, "")
+}
 
+const deleFromCloudinary = async (url, resourceType = "image") => {
+  try {
+    if(!url) return null
+    const publicId = getPublicIdFromUrl(url)
+    if(!publicId) return null
+    return await cloudinary.uploader.destroy(publicId, {
+      resource_type: resourceType
+    })
+  } catch (error) {
+    console.log("Cloudinary delete failed", error)
+    return null
+  }
+
+}
+
+export {
+  uploadOnCloudinary,
+  deleFromCloudinary
+}
 
