@@ -33,7 +33,7 @@ const getPublicIdFromUrl = (url)=>{
   return afterUpload.replace(/^v\d+\//, "").replace(/\.[^/.]+$/, "")
 }
 
-const deleFromCloudinary = async (url, resourceType = "image") => {
+const deleteFromCloudinary = async (url, resourceType = "image") => {
   try {
     if(!url) return null
     const publicId = getPublicIdFromUrl(url)
@@ -50,6 +50,6 @@ const deleFromCloudinary = async (url, resourceType = "image") => {
 
 export {
   uploadOnCloudinary,
-  deleFromCloudinary
+  deleteFromCloudinary
 }
 

@@ -4,14 +4,13 @@ import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { deleFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
+import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const getAllVideos = asyncHandler(async (req, res) => {
-  //TODO: get all videos based on query, sort, pagination
   const {
     query = "",
     sortBy = "createdAt",
-    sortType = "asc",
+    sortType = "desc",
     userId,
   } = req.query;
   const page = Math.max(parseInt(req.query.page) || 1, 1);
@@ -100,9 +99,8 @@ const getAllVideos = asyncHandler(async (req, res) => {
 
 const publishAVideo = asyncHandler(async (req, res) => {
   const { title, description, isPublished } = req.body;
-  // TODO: get video, upload to cloudinary, create video
 
-  if (!title.trim() || !description.trim()) {
+  if (!title?.trim() || !description?.trim()) {
     throw new ApiError(400, "title and description are required fields");
   }
 
@@ -140,10 +138,11 @@ const publishAVideo = asyncHandler(async (req, res) => {
 
 const getVideoById = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
-  //TODO: get video by id
   if(!isValidObjectId(videoId)){
     throw new ApiError(400, "Invalid video id")
   }
+
+  
 
   const video = await Video.findByIdAndUpdate(
     videoId,
@@ -151,13 +150,15 @@ const getVideoById = asyncHandler(async (req, res) => {
     { returnDocument: "after"}
   ).populate("owner", "fullName username avatar")
 
-  if (!video) {
-    throw new ApiError(404, "Video not found");
-  }
-  const isOwner = req.user?._id?.toString() === video.owner._id.toString()
+  const isOwner = req.user?._id?.toString() === video?.owner?._id?.toString()
   if (!isOwner && !video.isPublished) {
     throw new ApiError(404, "Video not found")
   }
+
+  if (!video) {
+    throw new ApiError(404, "Video not found");
+  }
+  
   return res
     .status(200)
     .json(new ApiResponse(200, video, "fetched video by id successfully"));
@@ -165,11 +166,7 @@ const getVideoById = asyncHandler(async (req, res) => {
 
 const updateVideo = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
-  //TODO: update video details like title, description, thumbnail
   const {title, description} = req.body
-  // if (!title || !description) {
-  //   throw new ApiError(400, "title and descriptions are required to update")
-  // }
 
   if (!isValidObjectId(videoId)) {
     throw new ApiError(400, "Invalid video ID")
@@ -177,7 +174,7 @@ const updateVideo = asyncHandler(async (req, res) => {
   
   const thumbnailLocalPath = req.file?.path
 
-  if (!title.trim() && description.trim() && !thumbnailLocalPath) {
+  if (!title?.trim() && !description?.trim() && !thumbnailLocalPath) {
     throw new ApiError(400, "Provide at least one of title, description or thumbnail")
   }
 
@@ -187,7 +184,7 @@ const updateVideo = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Video not found")
   }
   
-  const isOwner = req.user?._id?.toString() === existingVideo?.owner?._id?.toString()
+  const isOwner = req.user?._id?.toString() === existingVideo?.owner?.toString()
   
   if (!isOwner) {
     throw new ApiError(403, "You are not allowed to update this video")
@@ -216,7 +213,7 @@ const updateVideo = asyncHandler(async (req, res) => {
   )
   if (thumbnailLocalPath) {
     
-    await deleFromCloudinary(existingVideo.thumbnail, "image")
+    await deleteFromCloudinary(existingVideo.thumbnail, "image")
   }
   
   return res
@@ -228,30 +225,27 @@ const updateVideo = asyncHandler(async (req, res) => {
 
 const deleteVideo = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
-  //TODO: delete video
-  /* 
-      1. find video using video id
-      2. Check whether the user is owner or not
-      3. Remove the video and it's thumbnail from cloudinary
-      4. delete the video documnet from database
+  if(!isValidObjectId(videoId)){
+    throw new ApiError(400, "Invalid video id")
+  }
 
-  */
   const video = await Video.findById(videoId)
   if(!video){
     throw new ApiError(404, "Video not found")
   }
-  const isOwner = req?.user?._id?.toString() === video?.owner?._id.toString()
+  const isOwner = req?.user?._id?.toString() === video?.owner?.toString()
   if (!isOwner) {
-    throw new ApiError( 500, "Unauthorized request")
+    throw new ApiError( 403, "Unauthorized request")
   }
-
-  await deleFromCloudinary(video.videoFile, "video")
-  await deleFromCloudinary(video.thumbnail, "image")
 
   const deletedVideo = await Video.findByIdAndDelete(videoId)
   if (!deletedVideo) {
     throw new ApiError(400, "Failed to delete video")
   }
+
+  await deleteFromCloudinary(video.videoFile, "video")
+  await deleteFromCloudinary(video.thumbnail, "image")
+
 
   return res
   .status(200)
