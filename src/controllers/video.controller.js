@@ -4,7 +4,7 @@ import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { deleFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const getAllVideos = asyncHandler(async (req, res) => {
   //TODO: get all videos based on query, sort, pagination
@@ -166,6 +166,64 @@ const getVideoById = asyncHandler(async (req, res) => {
 const updateVideo = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   //TODO: update video details like title, description, thumbnail
+  const {title, description} = req.body
+  // if (!title || !description) {
+  //   throw new ApiError(400, "title and descriptions are required to update")
+  // }
+
+  if (!isValidObjectId(videoId)) {
+    throw new ApiError(400, "Invalid video ID")
+  }
+  
+  const thumbnailLocalPath = req.file?.path
+
+  if (!title.trim() && description.trim() && !thumbnailLocalPath) {
+    throw new ApiError(400, "Provide at least one of title, description or thumbnail")
+  }
+
+  
+  const existingVideo = await Video.findById(videoId).select("owner thumbnail")
+  if (!existingVideo) {
+    throw new ApiError(404, "Video not found")
+  }
+  
+  const isOwner = req.user?._id?.toString() === existingVideo?.owner?._id?.toString()
+  
+  if (!isOwner) {
+    throw new ApiError(403, "You are not allowed to update this video")
+  }
+
+  const updateFields = {}
+  if(title?.trim()) updateFields.title = title.trim()
+  if(description?.trim()) updateFields.description = description.trim()
+  
+  if (thumbnailLocalPath) {
+    const newThumbnail = await uploadOnCloudinary(thumbnailLocalPath)
+    if(!newThumbnail?.url){
+      throw new ApiError(500, "Failed to upload thumbnail" )
+    }
+    updateFields.thumbnail = newThumbnail.url
+  }
+  
+  const video = await Video.findByIdAndUpdate(
+    videoId,
+    {
+      $set: updateFields
+    },
+    {
+      returnDocument: "after"
+    }
+  )
+  if (thumbnailLocalPath) {
+    
+    deleFromCloudinary(existingVideo.thumbnail, "image")
+  }
+  
+  return res
+  .status(200)
+  .json(
+    new ApiResponse(200, video, "Video details updated successfully")
+  )
 });
 
 const deleteVideo = asyncHandler(async (req, res) => {
