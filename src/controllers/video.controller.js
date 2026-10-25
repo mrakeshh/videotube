@@ -216,7 +216,7 @@ const updateVideo = asyncHandler(async (req, res) => {
   )
   if (thumbnailLocalPath) {
     
-    deleFromCloudinary(existingVideo.thumbnail, "image")
+    await deleFromCloudinary(existingVideo.thumbnail, "image")
   }
   
   return res
@@ -229,6 +229,36 @@ const updateVideo = asyncHandler(async (req, res) => {
 const deleteVideo = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   //TODO: delete video
+  /* 
+      1. find video using video id
+      2. Check whether the user is owner or not
+      3. Remove the video and it's thumbnail from cloudinary
+      4. delete the video documnet from database
+
+  */
+  const video = await Video.findById(videoId)
+  if(!video){
+    throw new ApiError(404, "Video not found")
+  }
+  const isOwner = req?.user?._id?.toString() === video?.owner?._id.toString()
+  if (!isOwner) {
+    throw new ApiError( 500, "Unauthorized request")
+  }
+
+  await deleFromCloudinary(video.videoFile, "video")
+  await deleFromCloudinary(video.thumbnail, "image")
+
+  const deletedVideo = await Video.findByIdAndDelete(videoId)
+  if (!deletedVideo) {
+    throw new ApiError(400, "Failed to delete video")
+  }
+
+  return res
+  .status(200)
+  .json(
+    new ApiResponse(200, deletedVideo, "Video deleted successfully")
+  )
+
 });
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
