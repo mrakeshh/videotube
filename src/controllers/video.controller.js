@@ -257,6 +257,34 @@ const deleteVideo = asyncHandler(async (req, res) => {
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
+  /*
+      1. get video by it's id
+      2. check owner
+      3. toggle isPublished
+  */
+ if(!isValidObjectId(videoId)){
+    throw new ApiError(400, "Invalid video id")
+  }
+  const video = await Video.findById(videoId)
+  if (!video) {
+    throw new ApiError(404, "Video not found")
+  }
+  if (req?.user?._id?.toString() !== video?.owner?.toString()) {
+    throw new ApiError( 403, "You are not allowed to change the visibility of the video")
+  }
+  video.isPublished = !video.isPublished
+  await video.save({validateBeforeSave: false})
+
+
+  const message = video.isPublished?
+  "Video is published successfully":
+  "Video is unpublished successfully"
+
+  return res
+  .status(200)
+  .json(
+    new ApiResponse(200, video, message)
+  )
 });
 
 export {
