@@ -96,7 +96,7 @@ const deleteTweet = asyncHandler(async (req, res) => {
     if(req?.user?._id?.toString() !== tweet?.owner?.toString()){
         throw new ApiError(403, "You are not allowed to delete this tweet")
     }
-    const deletedTweet = await tweet.deleteOne()
+    await tweet.deleteOne()
 
     return res
     .status(200)
