@@ -18,9 +18,9 @@ const createPlaylist = asyncHandler(async (req, res) => {
   })
 
   return res
-  .status(200)
+  .status(201)
   .json(
-    new ApiResponse(200, playlist, "Playlist created successfully")
+    new ApiResponse(201, playlist, "Playlist created successfully")
   )
 
 });
@@ -28,11 +28,32 @@ const createPlaylist = asyncHandler(async (req, res) => {
 const getUserPlaylists = asyncHandler(async (req, res) => {
   const { userId } = req.params;
   //TODO: get user playlists
+  if (!isValidObjectId(userId)) {
+    throw new ApiError(400, "Invalid user ID")
+  }
+  const userPlaylists = await Playlist.find({ owner: userId }).sort({ createdAt: -1})
+  
+  return res
+  .status(200)
+  .json(
+    new ApiResponse(200, userPlaylists, "user playlists fetched successfully")
+  )
 });
 
 const getPlaylistById = asyncHandler(async (req, res) => {
   const { playlistId } = req.params;
   //TODO: get playlist by id
+  
+  if (!isValidObjectId(playlistId)) {
+    throw new ApiError(400, "Invalid playlist ID")
+  }
+  const playlist = await Playlist.findById(playlistId)
+  
+  return res
+  .status(200)
+  .json(
+    new ApiResponse(200, playlist, "user playlists fetched successfully")
+  )
 });
 
 const addVideoToPlaylist = asyncHandler(async (req, res) => {
