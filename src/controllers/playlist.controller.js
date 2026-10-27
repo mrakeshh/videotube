@@ -1,5 +1,6 @@
 import mongoose, { isValidObjectId } from "mongoose";
 import { Playlist } from "../models/playlist.model.js";
+import {Video} from "../models/video.model.js"
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -58,11 +59,54 @@ const getPlaylistById = asyncHandler(async (req, res) => {
 
 const addVideoToPlaylist = asyncHandler(async (req, res) => {
   const { playlistId, videoId } = req.params;
+  if (!isValidObjectId(playlistId) && !isValidObjectId(videoId)) {
+    throw new ApiError(400, "Invalid video ID or playlist ID")
+  }
+  const playlist = await Playlist.findById(playlistId)
+  const video = await Video.findById(videoId)
+
+  if(!playlist){
+    throw new ApiError(404, "Playlist not found")
+  }
+  if(!video){
+    throw new ApiError(404, "video not found")
+  }
+
+  const isOwner =
+    req.user?._id?.toString() === playlist?.owner?.toString();
+
+  if (!isOwner) {
+    throw new ApiError(403, "You are not allowed to add videos to this playlist");
+  }
+
+  // // make another database call
+  // const updatedPlaylist = await Playlist.findByIdAndUpdate(
+  //   playlistId,
+  //   { $addToSet: { videos: video._id } },
+  //   { returnDocument: "after" }
+  // )
+  const alreadyAdded = playlist.videos.some((id)=> id.toString() === video._id.toString())
+  if(alreadyAdded){
+    throw new ApiError(400, "Video already in the playlist")
+    
+  }
+
+  playlist.videos.push(video._id)
+  await playlist.save()
+  
+  return res
+  .status(200)
+  .json(
+    new ApiResponse(200, playlist, "Video added to the playlist")
+  )
+
 });
 
 const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
   const { playlistId, videoId } = req.params;
   // TODO: remove video from playlist
+  
+  
 });
 
 const deletePlaylist = asyncHandler(async (req, res) => {
