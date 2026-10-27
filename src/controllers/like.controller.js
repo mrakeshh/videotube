@@ -127,47 +127,72 @@ const getLikedVideos = asyncHandler(async (req, res) => {
   //TODO: get all liked videos
   const likedVideos = await Like.aggregate([
     {
-      $match: { likedBy: req?.user?._id },
+      $match: {
+        likedBy: req?.user?._id,
+        video: { $ne: null },
+      },
+    },
+    {
+      $sort: { createdAt: -1 },
     },
     {
       $lookup: {
         from: "videos",
         localField: "video",
         foreignField: "_id",
-        as: "videos",
+        as: "video",
         pipeline: [
           {
+            $match: {
+              isPublished: true,
+            },
+          },
+          {
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [
+                {
+                  $project: {
+                    fullName: 1,
+                    username: 1,
+                    avatar: 1,
+                  },
+                },
+              ],
+            },
+          },
+          { $unwind: "$owner" },
+          {
             $project: {
-              owner: 1,
-              videoFile: 1,
-              views: 1,
-              duration: 1,
-              description: 1,
               title: 1,
+              description: 1,
               thumbnail: 1,
+              videoFile: 1,
+              duration: 1,
+              views: 1,
+              createdAt: 1,
+              owner: 1,
             },
           },
         ],
       },
     },
     {
-      $addFields: {
-        videos: {$first: "$videos"}
-      },
+        $unwind: "$video"
     },
     {
-        $project: {
-            videos: 1,
-            likedBy: 1
-        }
+        $replaceRoot: { newRoot: "$video"}
     }
   ]);
 
   return res
-  .status(200)
-  .json(
-    new ApiResponse(200, likedVideos, "Liked videos fetched successfully")
-  )
+    .status(200)
+    .json(
+      new ApiResponse(200, likedVideos, "Liked videos fetched successfully")
+    );
 });
 
 export { toggleCommentLike, toggleTweetLike, toggleVideoLike, getLikedVideos };
