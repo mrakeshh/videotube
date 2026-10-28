@@ -8,7 +8,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 const createPlaylist = asyncHandler(async (req, res) => {
   const { name, description } = req.body;
 
-  //TODO: create playlist
+  //  create playlist
   if (!name.trim()) {
     throw new ApiError(400, "Name is required to create a playlist");
   }
@@ -28,7 +28,7 @@ const createPlaylist = asyncHandler(async (req, res) => {
 
 const getUserPlaylists = asyncHandler(async (req, res) => {
   const { userId } = req.params;
-  //TODO: get user playlists
+  //  get user playlists
   if (!isValidObjectId(userId)) {
     throw new ApiError(400, "Invalid user ID")
   }
@@ -43,7 +43,7 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
 
 const getPlaylistById = asyncHandler(async (req, res) => {
   const { playlistId } = req.params;
-  //TODO: get playlist by id
+  //  get playlist by id
   
   if (!isValidObjectId(playlistId)) {
     throw new ApiError(400, "Invalid playlist ID")
@@ -104,7 +104,7 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
 
 const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
   const { playlistId, videoId } = req.params;
-  // TODO: remove video from playlist
+  //   remove video from playlist
   
   if (!isValidObjectId(playlistId) && !isValidObjectId(videoId)) {
     throw new ApiError(400, "Invalid video ID or playlist ID")
@@ -136,7 +136,7 @@ const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
 
 const deletePlaylist = asyncHandler(async (req, res) => {
   const { playlistId } = req.params;
-  // TODO: delete playlist
+  //   delete playlist
   if (!isValidObjectId(playlistId)) {
     throw new ApiError(400, "Invalid playlist ID")
   }
@@ -169,7 +169,7 @@ const deletePlaylist = asyncHandler(async (req, res) => {
 const updatePlaylist = asyncHandler(async (req, res) => {
   const { playlistId } = req.params;
   const { name, description } = req.body;
-  //TODO: update playlist
+  //  update playlist
   
   if (!isValidObjectId(playlistId)) {
     throw new ApiError(400, "Invalid playlist ID")
