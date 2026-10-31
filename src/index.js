@@ -10,16 +10,13 @@ dotenv.config({
 
 connectDB()
   .then(() => {
-    app.on("error", (error) => {
-      console.log("Error :: ", error);
-      throw error;
-    });
     app.listen(process.env.PORT || 8000, () => {
       console.log(`Server is runnig at port : ${process.env.PORT}`);
     });
   })
   .catch((error) => {
     console.log("MONGO DB CONNECTION FAILED :: ", error);
+    process.exit(1);
   });
 
 // import mongoose from "mongoose";

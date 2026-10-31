@@ -1,21 +1,23 @@
 import mongoose from "mongoose";
 import { DB_NAME } from "../constants.js";
 
+let connectionPromise = null;
+
 const connectDB = async () => {
-  //DataBase is in another continent
-  try {
-    const connectionInstance = await mongoose.connect(
-      `${process.env.MONGODB_URI}/${DB_NAME}`
-    );
-    console.log(
-      `MongoDB connected!! DB HOST :: ${connectionInstance.connection.host}`
-    );
-    console.log(mongoose.connection.host, mongoose.connection.name);
-    // console.log(`MongoDB connected!! DB HOST :: ${connectionInstance}`);
-  } catch (error) {
-    console.log("MongoDB conncetion FAILED :: ", error);
-    process.exit(1);
+  if (mongoose.connection.readyState === 1) return;
+
+  if (!connectionPromise) {
+    connectionPromise = mongoose
+      .connect(process.env.MONGODB_URI, { dbName: DB_NAME })
+      .catch((error) => {
+        connectionPromise = null; // allow a retry on the next request
+        console.log("MongoDB connection FAILED :: ", error);
+        throw error;
+      });
   }
+
+  await connectionPromise;
+  console.log("MongoDB connected!!");
 };
 
 export default connectDB;
