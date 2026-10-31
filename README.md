@@ -236,6 +236,7 @@ Test the API with [Postman](https://www.postman.com/) or Thunder Client:
 - For protected routes, log in first so the access token cookie is set, or add a `Bearer` token header.
 
 ---
+🌐 **Live API:** [https://your-app.vercel.app/api/v1/healthcheck](https://your-app.vercel.app/api/v1/healthcheck)
 
 ## 🙌 Acknowledgements
 
