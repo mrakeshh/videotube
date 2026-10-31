@@ -43,4 +43,4 @@ app.use("/api/v1/dashboard", dashboardRouter)
 // the website domain will look like https://localhost:8000/api/v1/users/register
 
 
-export { app };
+export default app
